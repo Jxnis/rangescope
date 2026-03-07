@@ -8,12 +8,16 @@
 export function normalizeRiskLevel(apiRiskLevel: string): string {
   if (!apiRiskLevel) return 'UNKNOWN';
 
-  const normalized = apiRiskLevel
-    .toUpperCase()
-    .replace(' RISK', '')
-    .replace(/\s+/g, '_');
+  // Extract just the core risk level (e.g. "CRITICAL" from "CRITICAL RISK (directly malicious)")
+  const upper = apiRiskLevel.toUpperCase();
+  
+  if (upper.includes('CRITICAL')) return 'CRITICAL';
+  if (upper.includes('VERY LOW') || upper.includes('VERY_LOW')) return 'VERY_LOW';
+  if (upper.includes('LOW')) return 'LOW';
+  if (upper.includes('MEDIUM')) return 'MEDIUM';
+  if (upper.includes('HIGH')) return 'HIGH';
 
-  return normalized;
+  return 'UNKNOWN';
 }
 
 /**
