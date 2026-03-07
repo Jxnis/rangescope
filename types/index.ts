@@ -25,6 +25,7 @@ export interface AddressRisk {
   riskLevel: 'VERY_LOW' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UNKNOWN';
   riskScore?: number;
   reasons?: string[];
+  error?: string;
 }
 
 export interface SanctionsResult {
@@ -32,6 +33,7 @@ export interface SanctionsResult {
   isSanctioned: boolean;
   isBlacklisted: boolean;
   details?: string[];
+  error?: string;
 }
 
 // Entity Types
