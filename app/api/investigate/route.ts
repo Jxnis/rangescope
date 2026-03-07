@@ -44,7 +44,14 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       const sendEvent = (event: string, data: any) => {
         const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(payload));
+        try {
+          controller.enqueue(encoder.encode(payload));
+        } catch (err: any) {
+          // Ignore "Controller is already closed" errors when the client disconnects mid-stream
+          if (err.code !== 'ERR_INVALID_STATE') {
+            console.error('SSE enqueue error:', err);
+          }
+        }
       };
 
       try {
@@ -87,11 +94,11 @@ export async function POST(request: NextRequest) {
         // Send completion
         sendEvent('done', { caseId: result.id });
 
-        controller.close();
+        try { controller.close(); } catch (_) {}
       } catch (error: any) {
         console.error('Investigation stream error:', error);
         sendEvent('error', { message: error.message });
-        controller.close();
+        try { controller.close(); } catch (_) {}
       }
     },
   });

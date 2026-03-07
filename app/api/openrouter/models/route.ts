@@ -48,7 +48,7 @@ export async function GET() {
       .sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
     return NextResponse.json({
-      defaultModel: process.env.OPENROUTER_MODEL || 'arcee-ai/trinity-large-preview:free',
+      defaultModel: process.env.OPENROUTER_MODEL || 'qwen/qwen3-vl-30b-a3b-thinking',
       totalModels: simplified.length,
       freeModelsCount: freeModels.length,
       freeModels,

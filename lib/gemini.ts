@@ -2,15 +2,14 @@
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'arcee-ai/trinity-large-preview:free';
+const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'qwen/qwen3-vl-30b-a3b-thinking';
 const APP_URL = process.env.OPENROUTER_SITE_URL || 'http://localhost:3000';
 const APP_TITLE = process.env.OPENROUTER_APP_NAME || 'RangeScope';
 const FALLBACK_MODELS = [
   DEFAULT_MODEL,
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'mistralai/mistral-nemo:free',
-  'qwen/qwen-2.5-72b-instruct:free',
+  'nvidia/nemotron-3-nano-30b-a3b:free',
+  'nvidia/llama-nemotron-embed-vl-1b-v2:free',
+  'arcee-ai/trinity-large-preview:free',
 ];
 
 if (!OPENROUTER_API_KEY) {
