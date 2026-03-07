@@ -161,3 +161,12 @@ export interface FundingSourceRow {
   funder_network: string | null;
   amount_usd: number | null;
 }
+
+export interface CaseVectorRow {
+  case_id: string;
+  address: string;
+  network: string;
+  vector_json: string;
+  summary: string | null;
+  created_at: string;
+}

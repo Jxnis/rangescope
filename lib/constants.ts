@@ -1,11 +1,11 @@
-// Risk Level Colors
+// Risk Level Colors (Professional palette inspired by blockchain explorers)
 export const RISK_COLORS = {
-  VERY_LOW: '#22c55e',  // green-500
-  LOW: '#84cc16',       // lime-500
-  MEDIUM: '#eab308',    // yellow-500
-  HIGH: '#f97316',      // orange-500
-  CRITICAL: '#ef4444',  // red-500
-  UNKNOWN: '#6b7280',   // gray-500
+  VERY_LOW: '#10b981',  // emerald-500 - safe, professional green
+  LOW: '#3b82f6',       // blue-500 - neutral, trustworthy
+  MEDIUM: '#f59e0b',    // amber-500 - caution
+  HIGH: '#f97316',      // orange-500 - warning
+  CRITICAL: '#ef4444',  // red-500 - danger
+  UNKNOWN: '#6b7280',   // gray-500 - neutral
 } as const;
 
 // Guardrails
@@ -18,16 +18,12 @@ export const GUARDRAILS = {
   CACHE_TTL_HOURS: 24,
 } as const;
 
-// Network Options
+// Network Options (Range API supported networks only)
 export const NETWORKS = [
   { value: 'ethereum', label: 'Ethereum' },
-  { value: 'solana', label: 'Solana' },
-  { value: 'bitcoin', label: 'Bitcoin' },
-  { value: 'tron', label: 'Tron' },
   { value: 'arbitrum', label: 'Arbitrum' },
   { value: 'base', label: 'Base' },
-  { value: 'polygon', label: 'Polygon' },
-  { value: 'optimism', label: 'Optimism' },
+  { value: 'solana', label: 'Solana' },
   { value: 'cosmoshub-4', label: 'Cosmos Hub' },
   { value: 'osmosis-1', label: 'Osmosis' },
 ] as const;

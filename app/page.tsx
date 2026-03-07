@@ -1,28 +1,43 @@
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { InvestigationForm } from '@/components/InvestigationForm';
+import { RecentCases } from '@/components/RecentCases';
+import Link from 'next/link';
 
 export default function Home() {
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-heading">RangeScope</h1>
-          <ThemeToggle />
+          <Link href="/" className="text-3xl font-heading hover:opacity-80 transition-opacity">
+            RangeScope
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/cases" className="text-sm font-medium hover:text-muted-foreground transition-colors">
+              Case History
+            </Link>
+            <ThemeToggle />
+          </div>
         </header>
 
-        <div className="text-center mt-20">
-          <h2 className="text-6xl font-heading mb-6">
-            Wallet Forensics & <br />Investigation Agent
+        <div className="text-center mt-12 mb-16">
+          <h2 className="text-5xl md:text-6xl font-heading mb-6">
+            Wallet Forensics &<br />Investigation Agent
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            An investigation memory system that learns patterns across cases<br />
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            An investigation memory system that learns patterns across cases
             and surfaces coordinated risk faster.
           </p>
+        </div>
 
-          <div className="mt-12 p-8 bg-card rounded-2xl border border-border">
-            <p className="text-sm text-muted-foreground">
-              Setting up... This is a placeholder. Backend integration coming next.
-            </p>
-          </div>
+        {/* Investigation Form */}
+        <div className="mb-16">
+          <InvestigationForm />
+        </div>
+
+        {/* Recent Cases */}
+        <div className="max-w-3xl mx-auto">
+          <h3 className="text-xl font-heading mb-6">Recent Investigations</h3>
+          <RecentCases />
         </div>
       </div>
     </main>

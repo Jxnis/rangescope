@@ -42,7 +42,7 @@ importers:
         specifier: ^1.25.4
         version: 1.29.1(react@19.2.4)
       react-markdown:
-        specifier: ^9.0.1
+        specifier: ^9.1.0
         version: 9.1.0(@types/react@19.2.14)(react@19.2.4)
       tailwind-merge:
         specifier: ^3.4.0

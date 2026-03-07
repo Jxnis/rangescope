@@ -378,6 +378,79 @@ function normalizeTransfersResponse(payload: any, address: string) {
   };
 }
 
+function toNumberOrUndefined(value: any): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function pickFirstNumber(source: Record<string, any>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const n = toNumberOrUndefined(source[key]);
+    if (n !== undefined) return n;
+  }
+  return undefined;
+}
+
+function normalizeFeaturesResponse(payload: any, address: string, network: string) {
+  const source = payload && typeof payload === 'object' ? payload : {};
+  const nested = source.features && typeof source.features === 'object' ? source.features : {};
+  const merged = { ...source, ...nested } as Record<string, any>;
+
+  const incomingUsd = pickFirstNumber(merged, [
+    'total_incoming_volume_usd',
+    'incoming_volume_usd',
+    'incomingVolumeUSD',
+  ]);
+  const outgoingUsd = pickFirstNumber(merged, [
+    'total_outgoing_volume_usd',
+    'outgoing_volume_usd',
+    'outgoingVolumeUSD',
+  ]);
+
+  let totalVolumeUSD = pickFirstNumber(merged, [
+    'totalVolumeUSD',
+    'total_volume_usd',
+    'volume_usd',
+    'total_usd_volume',
+  ]);
+
+  if (totalVolumeUSD === undefined && (incomingUsd !== undefined || outgoingUsd !== undefined)) {
+    totalVolumeUSD = (incomingUsd || 0) + (outgoingUsd || 0);
+  }
+
+  return {
+    ...source,
+    address: merged.address || address,
+    network: merged.network || network,
+    transactionCount: pickFirstNumber(merged, [
+      'transactionCount',
+      'transaction_count',
+      'tx_count',
+      'total_transactions',
+      'num_transactions',
+    ]),
+    totalVolume: pickFirstNumber(merged, [
+      'totalVolume',
+      'total_volume',
+    ]),
+    totalVolumeUSD,
+    counterparties: pickFirstNumber(merged, [
+      'counterparties',
+      'unique_counterparties',
+      'counterparty_count',
+      'unique_counterparty_count',
+    ]),
+    activeDays: pickFirstNumber(merged, [
+      'activeDays',
+      'active_days',
+      'active_duration_days',
+    ]),
+    firstSeen: merged.firstSeen || merged.first_seen || merged.first_activity || undefined,
+    lastSeen: merged.lastSeen || merged.last_seen || merged.last_activity || undefined,
+  };
+}
+
 // Risk & Sanctions
 export async function getAddressRisk(address: string, network?: string) {
   try {
@@ -567,11 +640,13 @@ export async function getAddressBalance(address: string, network: string) {
 
 export async function getAddressFeatures(address: string, network: string) {
   try {
-    return await callRangeAPI('/v1/data/address/features', { address, network });
+    const rest = await callRangeAPI('/v1/data/address/features', { address, network });
+    return normalizeFeaturesResponse(rest, address, network);
   } catch (error: any) {
     if (shouldUseMCPFallback(error)) {
       try {
-        return await callMCPTool('get_address_features', { address, network });
+        const mcp = await callMCPTool('get_address_features', { address, network });
+        return normalizeFeaturesResponse(mcp, address, network);
       } catch (mcpError: any) {
         console.error('getAddressFeatures MCP fallback error:', mcpError.message);
         return {

@@ -182,6 +182,7 @@ function buildGraphData(result: any): { nodes: GraphNode[]; links: GraphLink[] }
   const topCounterparties = result.connections.slice(0, 10);
   for (const conn of topCounterparties) {
     const counterpartyId = conn.address;
+    if (!counterpartyId || counterpartyId === result.address) continue;
 
     // Find risk from hop2
     const hop2Risk = result.hop2Risks.find((r: any) => r.address === counterpartyId);

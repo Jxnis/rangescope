@@ -19,22 +19,26 @@ export async function findPatterns(
 
     if (sharedFunders.length > 0) {
       // Group by funder
-      const funderMap = new Map<string, string[]>();
+      const funderMap = new Map<string, { caseIds: string[]; addresses: string[] }>();
 
       for (const match of sharedFunders) {
+        if (match.relatedAddress.toLowerCase() === address.toLowerCase()) continue;
         if (!funderMap.has(match.sharedFunder)) {
-          funderMap.set(match.sharedFunder, []);
+          funderMap.set(match.sharedFunder, { caseIds: [], addresses: [] });
         }
-        funderMap.get(match.sharedFunder)!.push(match.relatedCase);
+        const group = funderMap.get(match.sharedFunder)!;
+        group.caseIds.push(match.relatedCaseId);
+        group.addresses.push(match.relatedAddress);
       }
 
       // Create pattern for each funder
-      for (const [funder, relatedCases] of funderMap) {
+      for (const [funder, group] of funderMap) {
+        const sampleAddress = group.addresses[0] || 'unknown';
         patterns.push({
           type: 'shared_funder',
-          relatedCases: relatedCases.slice(0, 5), // Limit to 5 most recent
-          details: `Shared funding origin: ${truncateAddress(funder)}. Detected in ${relatedCases.length} other case(s).`,
-          confidence: calculatePatternConfidence(relatedCases.length, 'shared_funder'),
+          relatedCases: group.caseIds.slice(0, 5), // Linkable case IDs
+          details: `Shared funding origin: ${truncateAddress(funder)}. Matched ${group.caseIds.length} case(s), e.g. ${truncateAddress(sampleAddress)}.`,
+          confidence: calculatePatternConfidence(group.caseIds.length, 'shared_funder'),
         });
       }
     }
@@ -51,12 +55,15 @@ export async function findPatterns(
     if (counterpartyOverlap.length > 0) {
       const topOverlap = counterpartyOverlap[0]; // Most overlapping case
 
-      if (topOverlap.sharedCounterparties >= 2) {
+      if (
+        topOverlap.sharedCounterparties >= 2 &&
+        topOverlap.relatedAddress.toLowerCase() !== address.toLowerCase()
+      ) {
         // At least 2 shared counterparties to be significant
         patterns.push({
           type: 'counterparty_overlap',
-          relatedCases: [topOverlap.relatedCase],
-          details: `${topOverlap.sharedCounterparties} shared counterparties with ${truncateAddress(topOverlap.relatedCase)}. Possible coordinated activity.`,
+          relatedCases: [topOverlap.relatedCaseId],
+          details: `${topOverlap.sharedCounterparties} shared counterparties with ${truncateAddress(topOverlap.relatedAddress)}. Possible coordinated activity.`,
           confidence: calculatePatternConfidence(topOverlap.sharedCounterparties, 'counterparty_overlap'),
         });
       }
