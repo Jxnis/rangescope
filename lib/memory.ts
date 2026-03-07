@@ -106,8 +106,9 @@ export function findBehavioralSimilarityPatterns(
     result.risk?.riskLevel === 'CRITICAL';
 
   if (!hasBehavioralSignal) return [];
-
-  const candidates = getCaseVectors(result.network, caseId, 200);
+  // Fetch from ALL networks to allow cross-chain behavioral matching
+  const candidates = getCaseVectors(undefined, caseId, 200);
+  console.log(`[Memory] Found ${candidates.length} candidates across all networks.`);
   if (candidates.length === 0) return [];
 
   const ranked = candidates
@@ -129,6 +130,8 @@ export function findBehavioralSimilarityPatterns(
   const relatedCases = ranked.map((item) => item.caseId);
   const top = ranked[0];
   const details = `Behavioral vector similarity matched ${ranked.length} prior case(s). Top match ${top.caseId.slice(0, 8)}... (${Math.round(top.similarity * 100)}% similarity).`;
+
+  console.log(`[Memory] Vector Matched ${ranked.length} cases! Top similarity: ${top.similarity}`);
 
   return [
     {
