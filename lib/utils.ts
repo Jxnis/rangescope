@@ -21,25 +21,32 @@ export function normalizeRiskLevel(apiRiskLevel: string): string {
 }
 
 /**
- * Get risk color from risk level
+ * Get risk color from risk level (uses constants)
  */
 export function getRiskColor(riskLevel: string): string {
+  const { RISK_COLORS } = require('./constants');
   const level = normalizeRiskLevel(riskLevel);
+  return RISK_COLORS[level as keyof typeof RISK_COLORS] || RISK_COLORS.UNKNOWN;
+}
 
-  switch (level) {
-    case 'VERY_LOW':
-      return '#22c55e'; // green-500
-    case 'LOW':
-      return '#84cc16'; // lime-500
-    case 'MEDIUM':
-      return '#eab308'; // yellow-500
-    case 'HIGH':
-      return '#f97316'; // orange-500
-    case 'CRITICAL':
-      return '#ef4444'; // red-500
-    default:
-      return '#6b7280'; // gray-500
-  }
+/**
+ * Auto-detect blockchain network from address format
+ */
+export function detectNetwork(address: string): string {
+  if (!address) return 'ethereum';
+  const trimmed = address.trim();
+
+  // Cosmos-based addresses
+  if (trimmed.startsWith('cosmos1')) return 'cosmoshub-4';
+  if (trimmed.startsWith('osmo1')) return 'osmosis-1';
+
+  // EVM addresses (0x prefix, 42 chars)
+  if (/^0x[a-fA-F0-9]{40}$/i.test(trimmed)) return 'ethereum';
+
+  // Solana addresses (base58, 32-44 chars, no 0x)
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return 'solana';
+
+  return 'ethereum'; // Default
 }
 
 /**

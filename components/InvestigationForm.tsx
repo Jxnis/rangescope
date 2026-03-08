@@ -1,53 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { NETWORKS } from '@/lib/constants';
+
+function detectNetwork(address: string): string {
+  if (!address) return 'ethereum';
+  const trimmed = address.trim();
+  if (trimmed.startsWith('cosmos1')) return 'cosmoshub-4';
+  if (trimmed.startsWith('osmo1')) return 'osmosis-1';
+  if (/^0x[a-fA-F0-9]{40}$/i.test(trimmed)) return 'ethereum';
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return 'solana';
+  return 'ethereum';
+}
 
 export function InvestigationForm() {
   const router = useRouter();
   const [address, setAddress] = useState('');
   const [network, setNetwork] = useState('ethereum');
   const [isLoading, setIsLoading] = useState(false);
+  const [autoDetected, setAutoDetected] = useState(false);
+
+  const handleAddressChange = useCallback((value: string) => {
+    setAddress(value);
+    if (value.trim().length > 10) {
+      const detected = detectNetwork(value);
+      setNetwork(detected);
+      setAutoDetected(true);
+    } else {
+      setAutoDetected(false);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!address.trim()) {
-      alert('Please enter a wallet address');
-      return;
-    }
-
+    if (!address.trim()) return;
     setIsLoading(true);
-    const normalizedAddress = address.trim();
-    router.push(`/investigate?address=${encodeURIComponent(normalizedAddress)}&network=${network}`);
+    router.push(`/investigate?address=${encodeURIComponent(address.trim())}&network=${network}`);
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
       <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
         <div className="space-y-6">
-          {/* Network Selector */}
-          <div>
-            <label htmlFor="network" className="block text-sm font-medium mb-3">
-              Network
-            </label>
-            <select
-              id="network"
-              value={network}
-              onChange={(e) => setNetwork(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              disabled={isLoading}
-            >
-              {NETWORKS.map((net) => (
-                <option key={net.value} value={net.value}>
-                  {net.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Address Input */}
+          {/* Address Input First */}
           <div>
             <label htmlFor="address" className="block text-sm font-medium mb-3">
               Wallet Address
@@ -56,14 +52,41 @@ export function InvestigationForm() {
               id="address"
               type="text"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all font-mono text-sm"
+              onChange={(e) => handleAddressChange(e.target.value)}
+              placeholder="Enter any address — network auto-detected"
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all font-mono text-sm"
               disabled={isLoading}
             />
             <p className="mt-2 text-xs text-muted-foreground">
-              Enter any blockchain address to begin investigation
+              Supports Ethereum, Arbitrum, Base, Solana, Cosmos Hub, and Osmosis
             </p>
+          </div>
+
+          {/* Network Selector with auto-detect badge */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <label htmlFor="network" className="block text-sm font-medium">
+                Network
+              </label>
+              {autoDetected && (
+                <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-md border border-blue-500/20">
+                  auto-detected
+                </span>
+              )}
+            </div>
+            <select
+              id="network"
+              value={network}
+              onChange={(e) => { setNetwork(e.target.value); setAutoDetected(false); }}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all"
+              disabled={isLoading}
+            >
+              {NETWORKS.map((net) => (
+                <option key={net.value} value={net.value}>
+                  {net.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Submit Button */}
@@ -81,7 +104,7 @@ export function InvestigationForm() {
                 Investigating...
               </span>
             ) : (
-              'Start Investigation'
+              'Investigate'
             )}
           </button>
         </div>
