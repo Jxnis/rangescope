@@ -173,7 +173,7 @@ function InvestigateContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-background/95">
-      <div className="max-w-[1600px] mx-auto px-8 py-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Top Navigation */}
         <header className="flex justify-between items-center mb-10">
           <Link href="/" className="text-2xl font-heading hover:opacity-80 transition-opacity">

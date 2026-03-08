@@ -20,6 +20,7 @@ export function InvestigationForm() {
   const [network, setNetwork] = useState('ethereum');
   const [isLoading, setIsLoading] = useState(false);
   const [autoDetected, setAutoDetected] = useState(false);
+  const [showNetworkOverride, setShowNetworkOverride] = useState(false);
 
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
@@ -62,31 +63,60 @@ export function InvestigationForm() {
             </p>
           </div>
 
-          {/* Network Selector with auto-detect badge */}
+          {/* Network Display Badge */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <label htmlFor="network" className="block text-sm font-medium">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium">
                 Network
               </label>
-              {autoDetected && (
-                <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-md border border-blue-500/20">
-                  auto-detected
-                </span>
+              {!showNetworkOverride && (
+                <button
+                  type="button"
+                  onClick={() => setShowNetworkOverride(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Change
+                </button>
               )}
             </div>
-            <select
-              id="network"
-              value={network}
-              onChange={(e) => { setNetwork(e.target.value); setAutoDetected(false); }}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all"
-              disabled={isLoading}
-            >
-              {NETWORKS.map((net) => (
-                <option key={net.value} value={net.value}>
-                  {net.label}
-                </option>
-              ))}
-            </select>
+
+            {showNetworkOverride ? (
+              <div className="space-y-2">
+                <select
+                  id="network"
+                  value={network}
+                  onChange={(e) => { setNetwork(e.target.value); setAutoDetected(false); }}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all"
+                  disabled={isLoading}
+                >
+                  {NETWORKS.map((net) => (
+                    <option key={net.value} value={net.value}>
+                      {net.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNetworkOverride(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border bg-muted/30">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="font-medium capitalize">
+                    {NETWORKS.find(n => n.value === network)?.label || network}
+                  </span>
+                  {autoDetected && (
+                    <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-md border border-blue-500/20">
+                      auto-detected
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

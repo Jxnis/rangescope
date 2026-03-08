@@ -16,7 +16,11 @@ function formatVolume(usd: number | undefined, flows?: any[]): string {
   if (flows && Array.isArray(flows) && flows.length > 0) {
     const totalToken = flows.reduce((sum: number, f: any) => sum + Math.abs(f.amount || 0), 0);
     if (totalToken > 0) {
-      const symbol = flows[0]?.token || 'tokens';
+      let symbol = flows[0]?.token || 'tokens';
+      // Truncate long token addresses
+      if (symbol.length > 8) {
+        symbol = `${symbol.slice(0, 4)}...${symbol.slice(-3)}`;
+      }
       if (totalToken >= 1_000) return `${(totalToken / 1_000).toFixed(1)}K ${symbol}`;
       return `${totalToken.toFixed(2)} ${symbol}`;
     }
@@ -44,6 +48,20 @@ export function RiskScorecard({ result }: RiskScorecardProps) {
   // Compute risk score ring percentage
   const riskScore = risk.riskScore || 1;
   const riskPct = Math.min(100, (riskScore / 10) * 100);
+
+  // Calculate Investigation Insights
+  const highRiskConnections = hop2Risks.filter(
+    (r: any) => r.riskLevel === 'HIGH' || r.riskLevel === 'CRITICAL'
+  ).length;
+  const riskContagion = connections.length > 0
+    ? Math.min(100, Math.round((highRiskConnections / Math.min(connections.length, hop2Risks.length)) * 100))
+    : 0;
+
+  const hasStrongBehavioralMatch = result?.patterns?.some(
+    (p: any) => p.type === 'behavioral_similarity' && p.confidence > 0.75
+  );
+
+  const networkCentrality = connections.length > 20 ? 'Hub' : connections.length > 5 ? 'Active' : 'Leaf';
 
   return (
     <div className="space-y-4">
@@ -110,7 +128,7 @@ export function RiskScorecard({ result }: RiskScorecardProps) {
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-xs text-muted-foreground mb-1">Volume</div>
-          <div className="text-lg font-heading font-semibold">{formatVolume(totalVolumeUSD, flows)}</div>
+          <div className="text-lg font-heading font-semibold truncate">{formatVolume(totalVolumeUSD, flows)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-xs text-muted-foreground mb-1">Counterparties</div>
@@ -119,6 +137,47 @@ export function RiskScorecard({ result }: RiskScorecardProps) {
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="text-xs text-muted-foreground mb-1">Hop-2 Scanned</div>
           <div className="text-lg font-heading font-semibold">{hop2Risks.length || 0}</div>
+        </div>
+      </div>
+
+      {/* Investigation Insights */}
+      <div className="bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-blue-500/10 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 7H7v6h6V7z" />
+            <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
+          </svg>
+          <h3 className="text-sm font-semibold text-blue-500">Investigation Insights</h3>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Risk Contagion</span>
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-2 bg-background/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-500"
+                  style={{ width: `${riskContagion}%` }}
+                />
+              </div>
+              <span className="font-mono font-semibold text-xs">{riskContagion}%</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Behavioral Match</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              hasStrongBehavioralMatch
+                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+            }`}>
+              {hasStrongBehavioralMatch ? 'Similar to known cases' : 'Unique pattern'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Network Role</span>
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-background/50 border border-border">
+              {networkCentrality}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -201,24 +260,29 @@ export function RiskScorecard({ result }: RiskScorecardProps) {
 
       {/* Asset Flow Summary */}
       {flows.length > 0 && (
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <h3 className="text-xs font-medium text-muted-foreground mb-3">Asset Flow</h3>
-          <div className="space-y-1.5">
-            {flows.slice(0, 6).map((flow: any, i: number) => {
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <h3 className="text-sm font-medium text-muted-foreground mb-4">Asset Flow</h3>
+          <div className="space-y-2.5">
+            {flows.slice(0, 10).map((flow: any, i: number) => {
               const isInflow = (flow.amount || 0) >= 0;
+              let token = flow.token || '';
+              // Truncate long token addresses
+              if (token.length > 10) {
+                token = `${token.slice(0, 5)}...${token.slice(-4)}`;
+              }
               return (
-                <div key={i} className="flex items-center justify-between text-xs">
+                <div key={i} className="flex items-center justify-between text-sm py-1">
                   <span className="text-muted-foreground">
                     {flow.timestamp ? new Date(flow.timestamp).toLocaleDateString() : `Flow ${i + 1}`}
                   </span>
-                  <span className={isInflow ? 'text-emerald-500' : 'text-red-400'}>
-                    {isInflow ? '+' : ''}{typeof flow.amount === 'number' ? flow.amount.toFixed(2) : '0'} {flow.token || ''}
+                  <span className={`font-mono font-medium ${isInflow ? 'text-emerald-500' : 'text-red-400'}`}>
+                    {isInflow ? '+' : ''}{typeof flow.amount === 'number' ? flow.amount.toFixed(2) : '0'} {token}
                   </span>
                 </div>
               );
             })}
-            {flows.length > 6 && (
-              <div className="text-xs text-muted-foreground text-center pt-1">+{flows.length - 6} more flows</div>
+            {flows.length > 10 && (
+              <div className="text-sm text-muted-foreground text-center pt-2 border-t border-border">+{flows.length - 10} more flows</div>
             )}
           </div>
         </div>
