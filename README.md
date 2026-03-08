@@ -1,470 +1,359 @@
-# RangeScope 🔍
+# RangeScope
 
-> AI-powered blockchain wallet forensics and investigation agent with cross-case pattern detection
+**An AI-powered wallet forensics investigation agent with behavioral memory**
 
-RangeScope is an intelligent investigation platform that combines Range's blockchain intelligence APIs with AI-powered analysis to provide comprehensive wallet risk assessments, connection mapping, and cross-case pattern detection.
+RangeScope is a blockchain forensics platform that investigates wallet addresses across multiple chains, learns behavioral patterns from historical cases, and surfaces hidden coordination risks through AI-powered analysis.
 
-![RangeScope](https://img.shields.io/badge/Next.js-16.1.6-black?style=flat-square&logo=next.js)
-![React](https://img.shields.io/badge/React-19.2.4-blue?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+Built for the Range AI Hackathon • [Live Demo](#) • [Documentation](./GAMEPLAN.md)
 
-## ✨ Features
+---
 
-### 🔍 Comprehensive Wallet Analysis
-- **Risk Triage**: Multi-factor risk assessment using Range's risk scoring
-- **Sanctions Screening**: Real-time OFAC and blacklist verification
-- **Entity Identification**: Automatic detection of known wallets, exchanges, and entities
-- **Connection Mapping**: Interactive force-directed graph of wallet relationships
-- **Funding Origin Tracing**: Track where wallets get their initial funding
-- **Asset Flow Analysis**: Historical transaction volume and token movements
-- **Counterparty Risk Scanning**: 2-hop network analysis for indirect exposure
+## ✨ Key Features
 
-### 🧠 AI-Powered Intelligence
-- **LLM-Generated Reports**: Compliance-style investigation summaries using OpenRouter
-- **Natural Language Analysis**: Convert complex blockchain data into actionable insights
-- **Contextual Risk Assessment**: AI explains patterns and provides recommendations
+### 🤖 Investigation Copilot (AI Chat Assistant)
+Interactive forensics assistant that answers natural-language questions with **live blockchain data**:
+- "What is the risk level of this wallet?"
+- "Show me the top counterparties"
+- "Has this address been sanctioned?"
+- Dynamically calls Range API based on your question
+- Provides compliance-ready explanations with citations
 
-### 🔗 Cross-Case Pattern Detection
-RangeScope's unique **memory system** learns from historical investigations:
+### 🧠 Behavioral Memory System
+Cross-case pattern detection using **12-dimensional behavioral vectors**:
+- **Cosine similarity matching** (0.82 threshold) across investigations
+- **Cross-chain cluster detection** - finds same entity operating on multiple networks
+- **Shared funder patterns** - identifies coordinated funding sources
+- **Counterparty overlap** - surfaces hidden relationships
 
-- **Shared Funding Detection**: Identifies wallets funded by the same source (potential batch operations)
-- **Counterparty Overlap**: Detects wallets sharing significant transaction partners (coordinated activity)
-- **Behavioral Similarity**: Vector-based matching finds wallets with similar risk profiles and activity patterns
-- **Confidence Scoring**: Each pattern comes with evidence-based confidence levels
-- **Interactive Case Links**: Click through to related investigations
+### 📊 Rich Investigation Dashboard
+Comprehensive risk visualization with:
+- **Risk Score Ring** - Visual risk indicator (0-10 scale)
+- **Investigation Insights Panel**:
+  - Risk Contagion % (how much risk comes from counterparties)
+  - Behavioral Match detection (similarity to known bad actors)
+  - Network Role analysis (Hub/Active/Leaf classification)
+- **Quick Stats** - Transactions, Volume, Counterparties, Hop-2 scanned
+- **Entity Profile** - Labels, categories, tags from Range intelligence
+- **Funding Source** - First funder tracing
+- **Top Counterparties** - Risk-colored mini-table with transfer counts
+- **Asset Flow Timeline** - Inflow/outflow visualization with token symbols
 
-### 🎨 Professional UI/UX
-- **Real-time Progress**: SSE streaming shows investigation pipeline steps live
-- **Interactive Visualizations**: Zoom, pan, and explore connection graphs
-- **Dark/Light Themes**: Automatic theme switching with system preference sync
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Professional Aesthetics**: Clean, blockchain-explorer-inspired interface
+### 🔍 Intelligent Network Detection
+Auto-detects blockchain network from address format:
+- `0x...` → Ethereum/EVM chains
+- `cosmos1...` → Cosmos Hub
+- `osmo1...` → Osmosis
+- Base58 → Solana
 
-## 🏗️ Architecture
+### 🎨 Polished UX
+- **Skeleton loading** - Shows dashboard preview during investigation
+- **Smooth micro-animations** - Motion presets for hero sections and cards
+- **Mobile-responsive** - Adaptive padding and layouts for all screen sizes
+- **Dark/Light themes** - System-aware theme toggle
+- **Live progress streaming** - Real-time SSE step updates
 
-### Tech Stack
+### 📈 Force-Directed Connection Graph
+Industry-standard visualization for forensics:
+- Risk-colored nodes (green → red gradient)
+- Directional relationships (funding, transactions)
+- Natural clustering of related entities
+- Hover details with entity labels
+- Single-node fallback for isolated wallets
 
-**Frontend:**
-- Next.js 16.1.6 (App Router)
-- React 19.2.4
-- TypeScript 5.x
-- Tailwind CSS 4.x
-- react-force-graph-2d (Network visualization)
-- next-themes (Theme management)
+### 📝 AI-Generated Reports
+Compliance-ready markdown reports with:
+- Executive Summary
+- Risk Assessment (score, sanctions, confidence)
+- Entity Profile (labels, behavioral stats)
+- Fund Flow Analysis (sources, counterparties, assets)
+- Cross-Case Intelligence (pattern matches)
+- Conclusion & Recommendation (CLEAR/MONITOR/SUSPICIOUS/BLOCK)
 
-**Backend:**
-- Next.js API Routes
-- SQLite (better-sqlite3) for case memory
-- OpenRouter API for LLM analysis
-- Range API (REST + MCP hybrid)
+### 🔗 Hybrid REST + MCP Architecture
+- Primary: Range REST API for predictable performance
+- Fallback: Range MCP tools (21 tools) when REST unavailable
+- Best of both worlds: speed + coverage
 
-**AI/LLM:**
-- Default: `arcee-ai/trinity-large-preview:free`
-- Fallback chain for rate-limit resilience
-- Streaming report generation
+---
 
-### Data Flow
-
-```
-1. User Input (Address + Network)
-   ↓
-2. Investigation Pipeline (9 steps, parallel batching)
-   ├─ Risk Triage
-   ├─ Sanctions Check
-   ├─ Entity Identification
-   ├─ Connections Analysis
-   ├─ Funding Origin Tracing
-   ├─ Asset Flow Analysis
-   ├─ Hop2 Risk Scanning
-   ├─ Pattern Matching (Memory System)
-   └─ AI Report Generation
-   ↓
-3. Results Display (Scorecard + Graph + Report)
-   ↓
-4. Memory Storage (SQLite + Vector Database)
-```
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js 18+ (or Bun 1.x)
-- pnpm (recommended) or npm
-- Range API key
-- OpenRouter API key
+- Node.js 18+
+- pnpm (or npm)
+- Range API Key ([Get one here](https://www.range.org/))
+- OpenRouter API Key ([Get one here](https://openrouter.ai/))
 
 ### Installation
 
 ```bash
-# Clone the repository
+# Clone the repo
 git clone https://github.com/yourusername/rangescope.git
 cd rangescope
 
 # Install dependencies
 pnpm install
 
-# Set up environment variables
+# Copy environment template
 cp .env.local.example .env.local
-```
 
-### Environment Configuration
+# Add your API keys to .env.local
+RANGE_API_KEY=your_range_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_MODEL=qwen/qwen3-vl-30b-a3b-thinking  # Optional
 
-Edit `.env.local` with your API keys:
-
-```env
-# Range API Configuration
-RANGE_API_KEY=your_range_api_key_here
-
-# OpenRouter Configuration (for AI reports)
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-OPENROUTER_MODEL=arcee-ai/trinity-large-preview:free
-OPENROUTER_SITE_URL=http://localhost:3000
-OPENROUTER_SITE_NAME=RangeScope
-```
-
-### Development
-
-```bash
-# Start development server
+# Run development server
 pnpm dev
-
-# Build for production
-pnpm build
-
-# Start production server
-pnpm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-## 📖 Usage Guide
-
-### Running an Investigation
-
-1. **Select Network**: Choose from Ethereum, Arbitrum, Base, Solana, Cosmos Hub, or Osmosis
-2. **Enter Address**: Paste a wallet address (e.g., `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`)
-3. **Start Investigation**: Click "Start Investigation"
-4. **Watch Progress**: Real-time SSE streaming shows each pipeline step
-5. **Review Results**: Explore the risk scorecard, connection graph, and AI report
-
-### Understanding Results
-
-**Risk Scorecard (Left Panel):**
-- Risk level with color coding (Very Low → Critical)
-- Sanctions status (OFAC, blacklists)
-- Entity information (exchanges, known addresses)
-- Funding origin details
-- Activity metrics (transactions, volume)
-
-**Connection Graph (Right Panel):**
-- Interactive force-directed graph
-- Root node (larger, bordered)
-- Counterparties sized by risk
-- Sanctioned nodes highlighted in red
-- Hover for details, drag to explore
-
-**Investigation Report (Bottom):**
-- Executive summary
-- Risk assessment breakdown
-- Entity profile
-- Fund flow analysis
-- Cross-case intelligence findings
-- Recommendations
-
-**Pattern Alerts (Top, if detected):**
-- Shared funding sources
-- Counterparty network overlaps
-- Behavioral similarity matches
-- Clickable links to related cases
-
-### Case History
-
-- View all past investigations at `/cases`
-- Click any case to see full details
-- Deduplicated by address+network
-- Searchable and filterable
-
-## 🧪 Testing
+Visit [http://localhost:3000](http://localhost:3000)
 
 ### Test Wallets
 
-Try these addresses to see different scenarios:
+Use official Range API test addresses:
 
-**High Activity Wallet:**
-```
-Address: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
-Network: Ethereum
-Expected: MEV bot, many connections, high volume
-```
+**Ethereum:**
+- `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb` (Normal activity)
+- `0x8576accC0330f6f56C8C42F580D6F1f2c5e7D8d3` (High risk)
 
-**Known Entity:**
-```
-Address: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-Network: Ethereum
-Expected: Vitalik Buterin, extensive history
-```
+**Solana:**
+- `7cvkjYAkUYs4W8XcXsca7cBrEGFeSUjeZmKoNBvEwyri` (Normal)
+- `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` (Raydium)
 
-**Flagged Address:**
-```
-Address: 0x412BC03309d61D372B13dDC9BD3b63B192F03863
-Network: Ethereum
-Expected: Phishing label, low activity, risk flags
-```
-
-See [TEST_WALLETS.md](./TEST_WALLETS.md) for more test scenarios.
-
-## 🔧 Configuration
-
-### Supported Networks
-
-Currently supports:
-- **Ethereum** (EVM)
-- **Arbitrum** (L2)
-- **Base** (L2)
-- **Solana**
-- **Cosmos Hub** (cosmoshub-4)
-- **Osmosis** (osmosis-1)
-
-*Note: Bitcoin, Tron, Polygon, and Optimism are not currently supported by Range API.*
-
-### Investigation Guardrails
-
-Configured in `lib/constants.ts`:
-
-```typescript
-export const GUARDRAILS = {
-  MAX_HOPS: 2,                    // Maximum network depth
-  MAX_API_CALLS_PER_RUN: 25,     // Budget per investigation
-  MAX_COUNTERPARTIES: 10,         // Connections to fetch
-  MAX_HOP2_SCANS: 5,              // Secondary risk scans
-  INVESTIGATION_TIMEOUT_MS: 45000, // 45 second timeout
-  CACHE_TTL_HOURS: 24,            // Historical data reuse
-}
-```
-
-### Pattern Detection Thresholds
-
-Memory system thresholds in `lib/memory.ts`:
-
-- **Behavioral Similarity**: 0.82+ cosine similarity
-- **Shared Funders**: 1+ matching funder
-- **Counterparty Overlap**: 2+ shared counterparties
-- **Confidence Levels**: Very High (90%), High (75%), Medium (60%), Low (50%)
-
-## 📊 Data Sources
-
-### Range API Integration
-
-RangeScope uses a **hybrid REST + MCP approach**:
-
-1. **Primary Path**: Range REST API endpoints
-   - `/v1/risk/address` - Risk assessment
-   - `/v1/risk/sanctions/{address}` - Sanctions screening
-   - `/v1/address` - Entity information
-
-2. **Fallback Path**: Range MCP (Model Context Protocol) tools
-   - When REST endpoints return 404 or errors
-   - Automatic session management
-   - Response normalization
-
-### Memory System
-
-**SQLite Database Schema:**
-
-```sql
--- Cases table
-CREATE TABLE cases (
-  id TEXT PRIMARY KEY,
-  address TEXT,
-  network TEXT,
-  timestamp TEXT,
-  riskLevel TEXT,
-  -- ... full investigation results
-);
-
--- Connections tracking
-CREATE TABLE connections (
-  id INTEGER PRIMARY KEY,
-  caseId TEXT,
-  fromAddress TEXT,
-  toAddress TEXT,
-  -- ... relationship metadata
-);
-
--- Funding sources
-CREATE TABLE funding_sources (
-  id INTEGER PRIMARY KEY,
-  caseId TEXT,
-  address TEXT,
-  funderAddress TEXT,
-  -- ... funding details
-);
-
--- Behavioral vectors
-CREATE TABLE case_vectors (
-  id INTEGER PRIMARY KEY,
-  caseId TEXT,
-  address TEXT,
-  network TEXT,
-  vector TEXT, -- JSON array of 12 features
-  summary TEXT
-);
-```
-
-## 🎯 Hackathon Demo Tips
-
-### Quick Demo Flow (3 minutes)
-
-1. **Open Homepage** - Explain the concept (15 sec)
-2. **Start Investigation** - Enter test wallet, show real-time progress (30 sec)
-3. **Explore Results** - Navigate scorecard → graph → report (60 sec)
-4. **Show Patterns** - Run second wallet, demonstrate pattern detection (45 sec)
-5. **Case History** - Show memory persistence (30 sec)
-
-### Key Talking Points
-
-- ✅ **AI Positioning**: "Agentic investigation pipeline with LLM summarization"
-- ✅ **Differentiation**: "Memory system learns from past investigations"
-- ✅ **Range Integration**: "Hybrid REST + MCP for comprehensive coverage"
-- ✅ **Practical Use**: "Compliance teams, fraud detection, due diligence"
-
-### Demo Presets
-
-Add these to `.env.local` for quick access:
-
-```env
-DEMO_WALLET_1=0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
-DEMO_WALLET_2=0x412BC03309d61D372B13dDC9BD3b63B192F03863
-DEMO_WALLET_3=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-```
-
-## 📝 API Reference
-
-### POST /api/investigate
-
-Start a new investigation (SSE streaming response).
-
-**Request:**
-```json
-{
-  "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-  "network": "ethereum"
-}
-```
-
-**Response (SSE):**
-```
-event: step
-data: {"step":"risk_triage","status":"running"}
-
-event: step
-data: {"step":"risk_triage","status":"done","data":{...}}
-
-event: graph
-data: {"nodes":[...],"links":[...]}
-
-event: report
-data: {"content":"# Investigation Report\n\n..."}
-
-event: done
-data: {"caseId":"uuid-here"}
-```
-
-### GET /api/cases
-
-List all investigation cases.
-
-**Query Params:**
-- `limit` (default: 50)
-- `offset` (default: 0)
-
-**Response:**
-```json
-{
-  "cases": [
-    {
-      "id": "uuid",
-      "address": "0x...",
-      "network": "ethereum",
-      "timestamp": "2026-03-07T...",
-      "riskLevel": "VERY_LOW",
-      "isSanctioned": false
-    }
-  ]
-}
-```
-
-### GET /api/cases/[id]
-
-Get full details for a specific case.
-
-**Response:**
-```json
-{
-  "id": "uuid",
-  "address": "0x...",
-  "network": "ethereum",
-  "risk": {...},
-  "sanctions": {...},
-  "entity": {...},
-  "connections": [...],
-  "patterns": [...],
-  "report": "..."
-}
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Test thoroughly (use test wallets)
-5. Commit with conventional commits (`feat:`, `fix:`, `docs:`, etc.)
-6. Push to your fork
-7. Open a Pull Request
-
-### Code Style
-
-- TypeScript strict mode
-- ESLint + Prettier
-- Conventional commits
-- Component documentation
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Range** - For providing comprehensive blockchain intelligence APIs
-- **OpenRouter** - For accessible LLM inference
-- **Next.js Team** - For the amazing React framework
-- **Force Graph** - For the network visualization library
-
-## 📧 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/rangescope/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/rangescope/discussions)
-- **Email**: your.email@example.com
-
-## 🗺️ Roadmap
-
-- [ ] Export reports to PDF
-- [ ] Batch investigation mode
-- [ ] Custom alert rules
-- [ ] Webhook notifications
-- [ ] Advanced pattern filters
-- [ ] More blockchain networks
-- [ ] GraphQL API
-- [ ] Multi-user support
+See [`TEST_WALLETS.md`](./TEST_WALLETS.md) for full list across all networks.
 
 ---
 
-**Built for the Range Hackathon 2026** 🚀
+## 🏗️ Architecture
 
-*Investigating wallets, detecting patterns, protecting users.*
+```
+User Input (auto-detects network)
+    ↓
+POST /api/investigate (SSE streaming)
+    ↓
+9-Step Investigation Pipeline:
+  1. get_address_risk
+  2. check_sanctions
+  3. get_entity
+  4. get_connections
+  5. get_first_funder
+  6. get_asset_flows
+  7. get_address_features
+  8. cross_case_patterns (behavioral vectors + shared funders + counterparty overlap)
+  9. save_to_memory (SQLite + vector store)
+    ↓
+AI Report Generation (OpenRouter LLM)
+    ↓
+Frontend Dashboard + Investigation Copilot
+```
+
+### Tech Stack
+- **Framework:** Next.js 16 (App Router, React 19, TypeScript)
+- **AI:** OpenRouter (Qwen 3 VL 30B, Llama 3.3 70B fallback)
+- **Database:** SQLite (better-sqlite3) with vector storage
+- **Blockchain Intel:** Range API (REST + MCP hybrid)
+- **Visualization:** react-force-graph-2d with D3
+- **Styling:** Tailwind CSS 4.1 with dark mode
+- **Animation:** Motion (Framer Motion)
+
+---
+
+## 📖 Core Concepts
+
+### Behavioral Vectors
+Each investigation is encoded as a **12-dimensional feature vector**:
+1. Risk level score (0-1)
+2. Raw risk score (0-1, normalized)
+3. Sanctions flag (0/1)
+4. Blacklist flag (0/1)
+5. Connection count (normalized)
+6. Has funding origin (0/1)
+7. Transaction count (normalized)
+8. Volume signal (log scale)
+9. Counterparties count (normalized)
+10. Active days (normalized)
+11. Hop-2 high-risk ratio (0-1)
+12. Has entity (0/1)
+
+**Cosine similarity** matches cases above 0.82 threshold, enabling cross-chain behavioral clustering.
+
+### Pattern Detection
+Three pattern types:
+- **Shared Funders** - Multiple wallets funded by same source
+- **Counterparty Overlap** - Significant shared transaction partners
+- **Behavioral Similarity** - Vector cosine distance < 0.82
+
+Patterns surface in **Pattern Alerts** with evidence explanations.
+
+### Investigation Insights (New!)
+AI-computed analytics:
+- **Risk Contagion %** - How much of wallet's risk comes from counterparties (visual progress bar)
+- **Behavioral Match** - "Similar to known cases" vs "Unique pattern"
+- **Network Role** - Hub (>20 connections), Active (5-20), or Leaf (<5)
+
+---
+
+## 🎯 Why This Stands Out
+
+### For Range (Hackathon Judges)
+- **Builds your product roadmap:** Investigation Copilot, automated reports, alert narratives (all explicitly mentioned in your docs)
+- **MCP showcase:** Hybrid REST+MCP architecture with 21-tool coverage
+- **AI positioning:** Not just a UI wrapper—actual agentic orchestration + memory layer
+
+### For Compliance Teams
+- **Cross-case memory:** Learns from every investigation, surfaces patterns others miss
+- **AI explainability:** Every insight is backed by specific data points
+- **Compliance-ready:** Reports follow SAR/AML format standards
+
+### For 2026 AI Trends
+- **Agentic infrastructure:** Investigation Copilot = autonomous analyst
+- **Behavioral fingerprinting:** Vector similarity for entity clustering
+- **Real-time data fusion:** Live API calls within conversational interface
+- **Persistent memory:** SQLite-backed case history with retrieval
+
+---
+
+## 📁 Project Structure
+
+```
+rangescope/
+├── app/
+│   ├── page.tsx                    # Landing page (hero + form)
+│   ├── investigate/page.tsx        # Live investigation (SSE streaming)
+│   ├── cases/page.tsx             # Case history list
+│   ├── cases/[id]/page.tsx        # Case detail view
+│   └── api/
+│       ├── investigate/route.ts   # Investigation pipeline + report gen
+│       ├── copilot/route.ts       # AI chat with live data fetching
+│       └── cases/                 # Case CRUD APIs
+├── components/
+│   ├── RiskScorecard.tsx          # Main dashboard (insights panel NEW)
+│   ├── ConnectionGraph.tsx        # Force-directed graph
+│   ├── InvestigationCopilot.tsx   # Floating chat panel (NEW)
+│   ├── InvestigationReport.tsx    # Markdown report viewer
+│   ├── PatternAlerts.tsx          # Cross-case pattern badges
+│   ├── StepProgress.tsx           # Live SSE progress bar
+│   ├── Skeleton.tsx               # Loading state (NEW)
+│   └── ...
+├── lib/
+│   ├── investigation.ts           # 9-step pipeline orchestrator
+│   ├── range.ts                   # Range API wrapper (REST + MCP)
+│   ├── gemini.ts                  # OpenRouter LLM wrapper
+│   ├── memory.ts                  # Behavioral vector similarity
+│   ├── patterns.ts                # Cross-case pattern matching
+│   ├── db.ts                      # SQLite schema + queries
+│   ├── utils.ts                   # Network detection + helpers
+│   ├── motion-presets.tsx         # Animation utilities (NEW)
+│   └── constants.ts               # Risk colors, networks, steps
+├── GAMEPLAN.md                    # Architecture decisions (single source of truth)
+├── TEST_WALLETS.md                # Official Range test addresses
+└── README.md                      # This file
+```
+
+---
+
+## 🔧 Environment Variables
+
+```bash
+# Required
+RANGE_API_KEY=your_range_api_key_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+
+# Optional
+OPENROUTER_MODEL=qwen/qwen3-vl-30b-a3b-thinking  # Default model
+# Fallback chain: qwen → nvidia/llama-3.3-70b → arcee-ai/trinity-large
+```
+
+---
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+```bash
+cd rangescope
+npx vercel
+```
+
+Set environment variables in Vercel dashboard:
+- `RANGE_API_KEY`
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_MODEL` (optional)
+
+**Note:** SQLite DB is ephemeral on Vercel (resets on cold starts). For production, migrate to Turso/libsql.
+
+---
+
+## 🤝 Contributing
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for development setup, code style, and PR guidelines.
+
+---
+
+## 📄 License
+
+MIT License - see [`LICENSE`](./LICENSE)
+
+---
+
+## 🎥 Demo Script (3 minutes)
+
+1. **Landing Page** (0:00-0:30)
+   - Enter test wallet (auto-detects network with badge)
+   - Show smooth hero animations
+
+2. **Live Investigation** (0:30-1:30)
+   - Watch SSE progress steps stream in real-time
+   - Skeleton loading → smooth fade to dashboard
+   - Point out Investigation Insights panel (risk contagion, behavioral match)
+   - Show pattern alerts with evidence
+
+3. **Investigation Copilot** (1:30-2:30)
+   - Click floating chat button
+   - Ask: "What is the risk level?" → Live API call + AI response
+   - Ask: "Who are the top counterparties?" → Dynamically fetches + explains
+   - Show markdown formatting and citations
+
+4. **Cross-Case Memory** (2:30-3:00)
+   - Navigate to case history
+   - Run second investigation of similar wallet
+   - Show behavioral similarity pattern match
+   - Explain vector-based clustering
+
+---
+
+## 🏆 Hackathon Highlights
+
+- ✅ **Investigation Copilot** - Prototypes Range's product roadmap feature
+- ✅ **21 MCP tools** - Hybrid REST+MCP coverage for all scenarios
+- ✅ **Behavioral fingerprinting** - 12D vectors with cosine similarity
+- ✅ **Cross-chain clustering** - Detects same entity across networks
+- ✅ **AI report generation** - Compliance-ready markdown with evidence
+- ✅ **Real-time streaming** - SSE progress with skeleton loading
+- ✅ **Mobile-responsive** - Works on all devices
+- ✅ **Production-ready** - Vercel deployable with proper error handling
+
+---
+
+## 🔗 Links
+
+- **Range Docs:** https://docs.range.org/
+- **Range MCP Tools:** https://github.com/rangedotai/mcp
+- **OpenRouter:** https://openrouter.ai/
+- **Bubblemaps (reference):** https://bubblemaps.io/ *(Note: Force graphs are better for forensics)*
+
+---
+
+## 💡 Future Roadmap
+
+- [ ] **Autonomous Monitoring Agents** - 24/7 address watchers with auto-investigation
+- [ ] **Predictive Risk Model** - ML-based risk forecasting
+- [ ] **Webhook Actions** - Auto-freeze/notify/report on pattern matches
+- [ ] **Multi-Hop Risk Diffusion** - Propagate risk scores through network
+- [ ] **PDF Export** - One-click compliance report download
+- [ ] **Turso/libsql Migration** - Persistent DB for production
+- [ ] **x402 Payment Triggers** - Automated investigation on risk threshold breaches
+
+---
+
+**Built with ❤️ for the Range AI Hackathon**
