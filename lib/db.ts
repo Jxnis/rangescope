@@ -12,20 +12,39 @@ import type {
   CaseVectorRow,
 } from '@/types';
 
-// Ensure db directory exists
-const dbDir = path.join(process.cwd(), 'db');
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+let db: Database.Database | null = null;
+
+// Lazy database initialization (only runs when actually used, not during build)
+function getDb(): Database.Database {
+  if (db) return db;
+
+  // Skip initialization during build time
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    throw new Error('Database not available during build');
+  }
+
+  // Ensure db directory exists
+  const dbDir = path.join(process.cwd(), 'db');
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  const dbPath = path.join(dbDir, 'rangescope.db');
+  db = new Database(dbPath);
+
+  // Enable WAL mode for better concurrency
+  db.pragma('journal_mode = WAL');
+
+  // Initialize schema
+  initializeDatabase();
+
+  return db;
 }
 
-const dbPath = path.join(dbDir, 'rangescope.db');
-const db = new Database(dbPath);
-
-// Enable WAL mode for better concurrency
-db.pragma('journal_mode = WAL');
-
 // Initialize database schema
-export function initializeDatabase() {
+function initializeDatabase() {
+  if (!db) return;
+
   db.exec(`
     -- Core investigation storage
     CREATE TABLE IF NOT EXISTS cases (
@@ -91,12 +110,9 @@ export function initializeDatabase() {
   `);
 }
 
-// Initialize on import
-initializeDatabase();
-
 // Save investigation case
 export function saveCase(investigation: InvestigationResult): void {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     INSERT INTO cases (
       id, address, network, timestamp, risk_level, risk_score,
       is_sanctioned, entity_name, entity_category, labels,
@@ -124,14 +140,14 @@ export function saveCase(investigation: InvestigationResult): void {
 
 // Save connections
 export function saveConnections(caseId: string, sourceAddress: string, connections: Connection[]): void {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     INSERT INTO connections (
       case_id, source_address, counterparty_address, counterparty_network,
       counterparty_label, transfer_count, total_usd, risk_level
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertMany = db.transaction((connections: Connection[]) => {
+  const insertMany = getDb().transaction((connections: Connection[]) => {
     for (const conn of connections) {
       stmt.run(
         caseId,
@@ -151,7 +167,7 @@ export function saveConnections(caseId: string, sourceAddress: string, connectio
 
 // Save funding source
 export function saveFundingSource(caseId: string, fundedAddress: string, funder: FundingSource): void {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     INSERT INTO funding_sources (
       case_id, funded_address, funder_address, funder_network, amount_usd
     ) VALUES (?, ?, ?, ?, ?)
@@ -174,7 +190,7 @@ export function saveCaseVector(
   vector: number[],
   summary?: string
 ): void {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     INSERT INTO case_vectors (case_id, address, network, vector_json, summary)
     VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(case_id) DO UPDATE SET
@@ -193,7 +209,7 @@ export function saveCaseVector(
 
 // Get case by ID
 export function getCaseById(id: string): InvestigationResult | null {
-  const stmt = db.prepare('SELECT * FROM cases WHERE id = ?');
+  const stmt = getDb().prepare('SELECT * FROM cases WHERE id = ?');
   const row = stmt.get(id) as CaseRow | undefined;
 
   if (!row) return null;
@@ -210,7 +226,7 @@ export function getCaseById(id: string): InvestigationResult | null {
 
 // Get all cases
 export function getAllCases(limit: number = 50, offset: number = 0): CaseRow[] {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     SELECT id, address, network, timestamp, risk_level, risk_score,
            is_sanctioned, entity_name, confidence, created_at
     FROM cases
@@ -225,10 +241,10 @@ export function getAllCases(limit: number = 50, offset: number = 0): CaseRow[] {
 export function findCasesByAddress(address: string, network?: string): CaseRow[] {
   let stmt;
   if (network) {
-    stmt = db.prepare('SELECT * FROM cases WHERE address = ? AND network = ? ORDER BY created_at DESC');
+    stmt = getDb().prepare('SELECT * FROM cases WHERE address = ? AND network = ? ORDER BY created_at DESC');
     return stmt.all(address, network) as CaseRow[];
   } else {
-    stmt = db.prepare('SELECT * FROM cases WHERE address = ? ORDER BY created_at DESC');
+    stmt = getDb().prepare('SELECT * FROM cases WHERE address = ? ORDER BY created_at DESC');
     return stmt.all(address) as CaseRow[];
   }
 }
@@ -264,7 +280,7 @@ export function getLatestCaseByAddress(address: string, network: string): Invest
 export function findSharedFunders(
   address: string
 ): Array<{ relatedCaseId: string; relatedAddress: string; sharedFunder: string }> {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     SELECT DISTINCT c2.id AS relatedCaseId, c2.address AS relatedAddress, f.funder_address AS sharedFunder
     FROM funding_sources f
     JOIN cases c1 ON f.case_id = c1.id
@@ -278,7 +294,7 @@ export function findSharedFunders(
 
 // Pattern matching: Find counterparty overlap
 export function findCounterpartyOverlap(caseId: string): Array<{ relatedCase: string; sharedCounterparties: number }> {
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     SELECT c2.address AS relatedCase, COUNT(*) AS sharedCounterparties
     FROM connections conn1
     JOIN connections conn2 ON conn1.counterparty_address = conn2.counterparty_address
@@ -300,7 +316,7 @@ export function findCounterpartyOverlapByAddresses(
   if (counterparties.length === 0) return [];
 
   const placeholders = counterparties.map(() => '?').join(', ');
-  const stmt = db.prepare(`
+  const stmt = getDb().prepare(`
     SELECT c.id AS relatedCaseId, c.address AS relatedAddress, COUNT(DISTINCT conn.counterparty_address) AS sharedCounterparties
     FROM connections conn
     JOIN cases c ON conn.case_id = c.id
@@ -322,7 +338,7 @@ export function getCaseVectors(
   let rows: CaseVectorRow[] = [];
 
   if (network && excludeCaseId) {
-    const stmt = db.prepare(`
+    const stmt = getDb().prepare(`
       SELECT case_id, address, network, vector_json, summary, created_at
       FROM case_vectors
       WHERE network = ? AND case_id != ?
@@ -331,7 +347,7 @@ export function getCaseVectors(
     `);
     rows = stmt.all(network, excludeCaseId, limit) as CaseVectorRow[];
   } else if (network) {
-    const stmt = db.prepare(`
+    const stmt = getDb().prepare(`
       SELECT case_id, address, network, vector_json, summary, created_at
       FROM case_vectors
       WHERE network = ?
@@ -340,7 +356,7 @@ export function getCaseVectors(
     `);
     rows = stmt.all(network, limit) as CaseVectorRow[];
   } else if (excludeCaseId) {
-    const stmt = db.prepare(`
+    const stmt = getDb().prepare(`
       SELECT case_id, address, network, vector_json, summary, created_at
       FROM case_vectors
       WHERE case_id != ?
@@ -349,7 +365,7 @@ export function getCaseVectors(
     `);
     rows = stmt.all(excludeCaseId, limit) as CaseVectorRow[];
   } else {
-    const stmt = db.prepare(`
+    const stmt = getDb().prepare(`
       SELECT case_id, address, network, vector_json, summary, created_at
       FROM case_vectors
       ORDER BY created_at DESC
@@ -388,13 +404,13 @@ export function getCaseVectors(
 
 // Close database (for cleanup)
 export function closeDatabase() {
-  db.close();
+  getDb().close();
 }
 
 // Update report after async generation completes
 export function updateCaseReport(caseId: string, report: string): void {
-  const stmt = db.prepare('UPDATE cases SET report = ? WHERE id = ?');
+  const stmt = getDb().prepare('UPDATE cases SET report = ? WHERE id = ?');
   stmt.run(report, caseId);
 }
 
-export default db;
+export default getDb;
