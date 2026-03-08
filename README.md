@@ -83,6 +83,7 @@ Compliance-ready markdown reports with:
 - pnpm (or npm)
 - Range API Key ([Get one here](https://www.range.org/))
 - OpenRouter API Key ([Get one here](https://openrouter.ai/))
+- Neon Postgres Database ([Create free DB at neon.tech](https://neon.tech/))
 
 ### Installation
 
@@ -101,6 +102,7 @@ cp .env.local.example .env.local
 RANGE_API_KEY=your_range_api_key
 OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=qwen/qwen3-vl-30b-a3b-thinking  # Optional
+DATABASE_URL=your_neon_postgres_connection_string
 
 # Run development server
 pnpm dev
@@ -140,7 +142,7 @@ POST /api/investigate (SSE streaming)
   6. get_asset_flows
   7. get_address_features
   8. cross_case_patterns (behavioral vectors + shared funders + counterparty overlap)
-  9. save_to_memory (SQLite + vector store)
+  9. save_to_memory (Neon Postgres + vector store)
     ↓
 AI Report Generation (OpenRouter LLM)
     ↓
@@ -150,7 +152,7 @@ Frontend Dashboard + Investigation Copilot
 ### Tech Stack
 - **Framework:** Next.js 16 (App Router, React 19, TypeScript)
 - **AI:** OpenRouter (Qwen 3 VL 30B, Llama 3.3 70B fallback)
-- **Database:** SQLite (better-sqlite3) with vector storage
+- **Database:** Neon Serverless Postgres with vector storage
 - **Blockchain Intel:** Range API (REST + MCP hybrid)
 - **Visualization:** react-force-graph-2d with D3
 - **Styling:** Tailwind CSS 4.1 with dark mode
@@ -241,7 +243,7 @@ rangescope/
 │   ├── gemini.ts                  # OpenRouter LLM wrapper
 │   ├── memory.ts                  # Behavioral vector similarity
 │   ├── patterns.ts                # Cross-case pattern matching
-│   ├── db.ts                      # SQLite schema + queries
+│   ├── db-postgres.ts             # Neon Postgres schema + queries
 │   ├── utils.ts                   # Network detection + helpers
 │   ├── motion-presets.tsx         # Animation utilities (NEW)
 │   └── constants.ts               # Risk colors, networks, steps
@@ -258,6 +260,7 @@ rangescope/
 # Required
 RANGE_API_KEY=your_range_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
+DATABASE_URL=your_neon_postgres_url  # From neon.tech or Vercel Storage tab
 
 # Optional
 OPENROUTER_MODEL=qwen/qwen3-vl-30b-a3b-thinking  # Default model
@@ -279,8 +282,9 @@ Set environment variables in Vercel dashboard:
 - `RANGE_API_KEY`
 - `OPENROUTER_API_KEY`
 - `OPENROUTER_MODEL` (optional)
+- `DATABASE_URL` — add a **Neon** database from the Vercel Storage tab; it auto-populates this variable
 
-**Note:** SQLite DB is ephemeral on Vercel (resets on cold starts). For production, migrate to Turso/libsql.
+**Auto-migration:** Tables are created automatically on the first request. No manual migration step needed.
 
 ---
 
@@ -351,7 +355,6 @@ MIT License - see [`LICENSE`](./LICENSE)
 - [ ] **Webhook Actions** - Auto-freeze/notify/report on pattern matches
 - [ ] **Multi-Hop Risk Diffusion** - Propagate risk scores through network
 - [ ] **PDF Export** - One-click compliance report download
-- [ ] **Turso/libsql Migration** - Persistent DB for production
 - [ ] **x402 Payment Triggers** - Automated investigation on risk threshold breaches
 
 ---
