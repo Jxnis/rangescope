@@ -9,6 +9,8 @@ import { RiskScorecard } from '@/components/RiskScorecard';
 import { ConnectionGraph } from '@/components/ConnectionGraph';
 import { InvestigationReport } from '@/components/InvestigationReport';
 import { PatternAlerts } from '@/components/PatternAlerts';
+import { InvestigationCopilot } from '@/components/InvestigationCopilot';
+import { DashboardSkeleton } from '@/components/Skeleton';
 import type { InvestigationResult, GraphNode, GraphLink } from '@/types';
 
 function InvestigateContent() {
@@ -234,8 +236,8 @@ function InvestigateContent() {
         )}
 
         {/* 3-Panel Layout */}
-        {isComplete && result && graphData && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {isComplete && result && graphData ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
             {/* Left: Risk Scorecard */}
             <div className="lg:col-span-1">
               <RiskScorecard result={result} />
@@ -251,6 +253,17 @@ function InvestigateContent() {
               <InvestigationReport report={report} caseId={result.id} />
             </div>
           </div>
+        ) : !isComplete && !error ? (
+          <DashboardSkeleton />
+        ) : null}
+
+        {/* Copilot FAB */}
+        {address && network && (
+          <InvestigationCopilot
+            caseId={result?.id}
+            address={address}
+            network={network}
+          />
         )}
       </div>
     </main>

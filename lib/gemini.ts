@@ -105,6 +105,47 @@ export async function generateInvestigationReport(
   }
 }
 
+/**
+ * Generate a copilot chat response
+ */
+export async function generateCopilotResponse(prompt: string): Promise<string> {
+  try {
+    const modelCandidates = buildModelCandidates();
+    let lastError: Error | null = null;
+
+    for (const model of modelCandidates) {
+      const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: openRouterHeaders(),
+        body: JSON.stringify({
+          model,
+          temperature: 0.3,
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        lastError = new Error(`Copilot error (${response.status}): ${errorText}`);
+        if (response.status === 429 || response.status >= 500) continue;
+        throw lastError;
+      }
+
+      const payload = await response.json();
+      const content = payload?.choices?.[0]?.message?.content;
+      const text = extractMessageContent(content);
+      if (text) return text;
+      lastError = new Error(`Empty copilot response from ${model}`);
+    }
+
+    throw lastError || new Error('Copilot failed for all models');
+  } catch (error: any) {
+    console.error('Copilot error:', error.message);
+    return `I encountered an error: ${error.message}. Please try again.`;
+  }
+}
+
 function extractDeltaContent(delta: any): string {
   const content = delta?.content;
   if (typeof content === 'string') return content;
