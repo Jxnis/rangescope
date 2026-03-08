@@ -23,8 +23,10 @@ function getDb(): Database.Database {
     throw new Error('Database not available during build');
   }
 
-  // Ensure db directory exists
-  const dbDir = path.join(process.cwd(), 'db');
+  // Use /tmp on Vercel (serverless read-only filesystem), local db/ otherwise
+  const isVercel = process.env.VERCEL === '1';
+  const dbDir = isVercel ? '/tmp' : path.join(process.cwd(), 'db');
+
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
