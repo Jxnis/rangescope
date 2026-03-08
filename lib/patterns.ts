@@ -1,5 +1,5 @@
 // Cross-Case Pattern Matching
-import { findSharedFunders, findCounterpartyOverlapByAddresses } from './db';
+import { findSharedFunders, findCounterpartyOverlapByAddresses } from './db-postgres';
 import type { PatternMatch, FundingSource, Connection } from '@/types';
 
 /**
@@ -15,7 +15,7 @@ export async function findPatterns(
 
   // Pattern 1: Shared Funder Detection
   if (fundingOrigin) {
-    const sharedFunders = findSharedFunders(address);
+    const sharedFunders = await findSharedFunders(address);
 
     if (sharedFunders.length > 0) {
       // Group by funder
@@ -50,7 +50,7 @@ export async function findPatterns(
       .map((conn) => conn.address)
       .filter(Boolean);
 
-    const counterpartyOverlap = findCounterpartyOverlapByAddresses(counterpartyAddresses);
+    const counterpartyOverlap = await findCounterpartyOverlapByAddresses(counterpartyAddresses);
 
     if (counterpartyOverlap.length > 0) {
       const topOverlap = counterpartyOverlap[0]; // Most overlapping case

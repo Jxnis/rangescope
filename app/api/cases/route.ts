@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllCases } from '@/lib/db';
+import { getAllCases, initializeDatabase } from '@/lib/db-postgres';
 
 /**
  * GET /api/cases
  * List all investigations
  */
 export async function GET(request: NextRequest) {
+  // Ensure tables exist
+  await initializeDatabase();
+
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '50');
   const offset = parseInt(searchParams.get('offset') || '0');
 
-  const caseRows = getAllCases(limit, offset);
+  const caseRows = await getAllCases(limit, offset);
   const cases = caseRows.map((row) => ({
     id: row.id,
     address: row.address,

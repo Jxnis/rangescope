@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCaseById, findCounterpartyOverlap } from '@/lib/db';
+import { getCaseById, findCounterpartyOverlap, initializeDatabase } from '@/lib/db-postgres';
 
 /**
  * GET /api/cases/[id]
@@ -10,7 +10,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const caseData = getCaseById(id);
+  
+  // Ensure tables exist
+  await initializeDatabase();
+  
+  const caseData = await getCaseById(id);
 
   if (!caseData) {
     return NextResponse.json(
@@ -20,7 +24,7 @@ export async function GET(
   }
 
   // Get pattern matches
-  const counterpartyOverlap = findCounterpartyOverlap(id);
+  const counterpartyOverlap = await findCounterpartyOverlap(id);
 
   return NextResponse.json({
     case: caseData,

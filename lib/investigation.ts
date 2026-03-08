@@ -13,7 +13,7 @@ import {
   getCallCount,
 } from './range';
 import { findPatterns } from './patterns';
-import { saveCase, saveConnections, saveFundingSource, saveCaseVector, getLatestCaseByAddress } from './db';
+import { saveCase, saveConnections, saveFundingSource, saveCaseVector, getLatestCaseByAddress, initializeDatabase } from './db-postgres';
 import { buildCaseSummary, buildCaseVector, findBehavioralSimilarityPatterns } from './memory';
 import { GUARDRAILS } from './constants';
 import type { InvestigationResult, Connection, Hop2RiskResult, FundingSource } from '@/types';
@@ -35,6 +35,9 @@ export async function runInvestigation(
   network: string,
   onStep?: StepCallback
 ): Promise<InvestigationResult> {
+  // Ensure tables exist before running any DB checks
+  await initializeDatabase();
+  
   const id = randomUUID();
   const timestamp = new Date().toISOString();
 
@@ -57,7 +60,7 @@ export async function runInvestigation(
     ]);
 
     // If provider rate limits or transient errors occur, reuse latest successful snapshot data.
-    const latestCase = getLatestCaseByAddress(address, network);
+    const latestCase = await getLatestCaseByAddress(address, network);
     const resolvedRisk =
       (risk?.error || !risk?.riskLevel || risk.riskLevel === 'UNKNOWN') && latestCase?.risk
         ? latestCase.risk
@@ -170,7 +173,7 @@ export async function runInvestigation(
 
     // Local vector memory: find behaviorally similar prior cases.
     const vector = buildCaseVector(result);
-    const memoryPatterns = findBehavioralSimilarityPatterns(id, result, vector);
+    const memoryPatterns = await findBehavioralSimilarityPatterns(id, result, vector);
     if (memoryPatterns.length > 0) {
       result.patterns = [...result.patterns, ...memoryPatterns];
     }
@@ -178,15 +181,15 @@ export async function runInvestigation(
     emitStep({ step: 'pattern_matching', status: 'done', data: result.patterns });
 
     // Save to database
-    saveCase(result);
-    saveCaseVector(id, address, network, vector, buildCaseSummary(result));
+    await saveCase(result);
+    await saveCaseVector(id, address, network, vector, buildCaseSummary(result));
 
     if (result.connections.length > 0) {
-      saveConnections(id, address, result.connections);
+      await saveConnections(id, address, result.connections);
     }
 
     if (result.fundingOrigin?.funderAddress) {
-      saveFundingSource(id, address, result.fundingOrigin);
+      await saveFundingSource(id, address, result.fundingOrigin);
     }
 
     return result;

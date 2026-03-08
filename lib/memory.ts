@@ -1,5 +1,5 @@
 // Vector-style local memory for cross-case similarity
-import { getCaseVectors } from './db';
+import { getCaseVectors } from './db-postgres';
 import type { InvestigationResult, PatternMatch } from '@/types';
 
 const SIMILARITY_THRESHOLD = 0.82;
@@ -91,11 +91,11 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
 
-export function findBehavioralSimilarityPatterns(
+export async function findBehavioralSimilarityPatterns(
   caseId: string,
   result: InvestigationResult,
   vector: number[]
-): PatternMatch[] {
+): Promise<PatternMatch[]> {
   const hasBehavioralSignal =
     (result.connections?.length || 0) > 0 ||
     safeNum(result.stats?.transactionCount) > 0 ||
@@ -107,7 +107,7 @@ export function findBehavioralSimilarityPatterns(
 
   if (!hasBehavioralSignal) return [];
   // Fetch from ALL networks to allow cross-chain behavioral matching
-  const candidates = getCaseVectors(undefined, caseId, 200);
+  const candidates = await getCaseVectors(undefined, caseId, 200);
   console.log(`[Memory] Found ${candidates.length} candidates across all networks.`);
   if (candidates.length === 0) return [];
 

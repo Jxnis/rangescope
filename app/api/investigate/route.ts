@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { runInvestigation, type InvestigationStep } from '@/lib/investigation';
 import { generateInvestigationReport } from '@/lib/gemini';
-import { getCaseById, updateCaseReport } from '@/lib/db';
+import { getCaseById, updateCaseReport, initializeDatabase } from '@/lib/db-postgres';
 import { getRiskColor } from '@/lib/utils';
 import type { GraphNode, GraphLink } from '@/types';
 
@@ -29,6 +29,9 @@ Rules:
  * Runs investigation and streams progress via SSE
  */
 export async function POST(request: NextRequest) {
+  // Ensure tables exist
+  await initializeDatabase();
+
   const { address, network } = await request.json();
 
   if (!address || !network) {

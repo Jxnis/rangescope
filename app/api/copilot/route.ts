@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { generateCopilotResponse } from '@/lib/gemini';
-import { getCaseById } from '@/lib/db';
+import { getCaseById, initializeDatabase } from '@/lib/db-postgres';
 import {
   getAddressRisk,
   checkSanctions,
@@ -37,6 +37,9 @@ Rules:
  * Chat with the Investigation Copilot
  */
 export async function POST(request: NextRequest) {
+  // Ensure tables exist
+  await initializeDatabase();
+
   const { message, caseId, address, network, context } = await request.json();
 
   if (!message) {
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     let caseContext = context || '';
 
     if (caseId) {
-      const caseData = getCaseById(caseId);
+      const caseData = await getCaseById(caseId);
       if (caseData) {
         caseContext = `Current investigation context:
 Address: ${caseData.address}
